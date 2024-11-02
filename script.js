@@ -19,9 +19,9 @@ document.getElementById('registerForm').addEventListener('submit', function(even
 });
 
 document.getElementById('loginForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    event.preventDefault(); // Mencegah pengiriman form default
 
-    const formData = new FormData(this);
+    const formData = new FormData(this); // Mengambil data dari form
     fetch('/login', {
         method: 'POST',
         body: formData,
@@ -29,13 +29,14 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Login berhasil!');
-            window.location.href = 'index.html';
+            alert('Login berhasil! Selamat datang!');
+            window.location.href = 'home.html'; // Mengarahkan pengguna ke halaman home
         } else {
             alert('Login gagal: ' + data.message);
         }
     })
     .catch(error => console.error('Error:', error));
 });
+
 
 // Implementasi serupa untuk reset password
