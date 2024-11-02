@@ -1,7 +1,7 @@
 document.getElementById('registerForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    event.preventDefault(); // Mencegah pengiriman form default
 
-    const formData = new FormData(this);
+    const formData = new FormData(this); // Mengambil data dari form
     fetch('/register', {
         method: 'POST',
         body: formData,
@@ -9,14 +9,15 @@ document.getElementById('registerForm').addEventListener('submit', function(even
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Pendaftaran berhasil!');
-            window.location.href = 'login.html';
+            alert('Pendaftaran berhasil! Silakan login.');
+            window.location.href = 'login.html'; // Mengarahkan pengguna ke halaman login
         } else {
             alert('Pendaftaran gagal: ' + data.message);
         }
     })
     .catch(error => console.error('Error:', error));
 });
+
 
 document.getElementById('loginForm').addEventListener('submit', function(event) {
     event.preventDefault(); // Mencegah pengiriman form default
