@@ -47,5 +47,6 @@ def login():
         else:
             return jsonify(success=False, message='Email atau password salah!'), 401
 
+
 if __name__ == '__main__':
     app.run(debug=True)
