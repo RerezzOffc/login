@@ -5,32 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendaftaran dan Login</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        /* Reset default margin and padding */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
+            background-color: #eef2f3;
         }
+
         .container {
             background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        h2 {
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 320px;
             text-align: center;
         }
-        .hidden {
-            display: none;
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5rem;
         }
+
+        form input[type="text"],
+        form input[type="email"],
+        form input[type="password"],
+        form input[type="button"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        form input[type="text"]:focus,
+        form input[type="email"]:focus,
+        form input[type="password"]:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
         .message {
             color: red;
-            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .link {
+            display: block;
+            margin-top: 15px;
+            color: #007BFF;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -43,8 +109,8 @@
                 <input type="password" id="login-password" placeholder="Kata Sandi" required>
                 <button type="submit">Masuk</button>
                 <p class="message" id="message"></p>
-                <p><a href="#" id="show-forgot-password">Lupa Kata Sandi?</a></p>
-                <p><a href="#" id="show-signup">Daftar</a></p>
+                <a href="#" id="show-forgot-password" class="link">Lupa Kata Sandi?</a>
+                <a href="#" id="show-signup" class="link">Daftar</a>
             </form>
         </div>
 
@@ -56,7 +122,7 @@
                 <input type="password" id="signup-password" placeholder="Kata Sandi" required>
                 <button type="submit">Daftar</button>
                 <p class="message" id="signup-message"></p>
-                <p><a href="#" id="show-login">Sudah punya akun? Masuk</a></p>
+                <a href="#" id="show-login" class="link">Sudah punya akun? Masuk</a>
             </form>
         </div>
 
@@ -66,7 +132,7 @@
                 <input type="email" id="reset-email" placeholder="Email" required>
                 <button type="submit">Kirim Kode Reset</button>
                 <p class="message" id="reset-message"></p>
-                <p><a href="#" id="show-login-from-forgot">Kembali ke Login</a></p>
+                <a href="#" id="show-login-from-forgot" class="link">Kembali ke Login</a>
             </form>
         </div>
 
@@ -75,7 +141,7 @@
             <form id="verification">
                 <input type="text" id="verification-code" placeholder="Kode Verifikasi" required>
                 <button type="submit">Verifikasi</button>
-                <button type="button" id="resend-code">Kirim Ulang Kode</button>
+                <button type="button" id="resend-code" disabled>Kirim Ulang Kode</button>
                 <p class="message" id="verification-message"></p>
             </form>
         </div>
@@ -85,12 +151,13 @@
     <script>
         // Inisialisasi EmailJS
         (function(){
-            emailjs.init("service_as386mt"); // Ganti dengan User ID Anda
+            emailjs.init("user_XXXXXXXXXXXXXXXX"); // Ganti dengan User ID Anda yang benar
         })();
 
         const users = JSON.parse(localStorage.getItem('users')) || [];
         let currentVerificationCode;
         let currentEmail;
+        let resendCountdown = 30; // Detik sebelum bisa kirim ulang
 
         // Fungsi untuk mengirim email verifikasi
         function sendEmailVerification(username, email) {
@@ -103,11 +170,12 @@
                 verification_code: currentVerificationCode,
             };
 
-            console.log('Mengirim email verifikasi ke:', email); // Log email yang dikirim
+            console.log('Mengirim email verifikasi ke:', email);
             emailjs.send('service_as386mt', 'template_e79x6wk', templateParams)
                 .then(function(response) {
                     console.log('Email verifikasi dikirim dengan sukses!', response.status, response.text);
                     document.getElementById('verification-message').textContent = 'Kode verifikasi telah dikirim ke email Anda.';
+                    startResendCountdown(); // Mulai hitungan mundur
                 }, function(error) {
                     console.log('Gagal mengirim email verifikasi:', error);
                     document.getElementById('verification-message').textContent = 'Gagal mengirim kode verifikasi. Silakan coba lagi.';
@@ -121,7 +189,6 @@
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
 
-            // Cek jika username mengandung spasi
             if (username.includes(' ')) {
                 document.getElementById('signup-message').textContent = 'Username tidak boleh mengandung spasi!';
                 return;
@@ -131,76 +198,32 @@
             users.push(user);
             localStorage.setItem('users', JSON.stringify(users));
 
-            // Kirim email verifikasi
             sendEmailVerification(username, email);
             document.getElementById('signup-form').classList.add('hidden');
             document.getElementById('verification-form').classList.remove('hidden');
         });
 
+        // Hitungan mundur tombol kirim ulang
+        function startResendCountdown() {
+            const resendButton = document.getElementById('resend-code');
+            resendButton.disabled = true;
+            resendCountdown = 30;
+            const countdownInterval = setInterval(() => {
+                resendCountdown--;
+                if (resendCountdown <= 0) {
+                    clearInterval(countdownInterval);
+                    resendButton.disabled = false;
+                    resendButton.textContent = "Kirim Ulang Kode";
+                } else {
+                    resendButton.textContent = `Kirim Ulang Kode (${resendCountdown}s)`;
+                }
+            }, 1000);
+        }
+
         // Kirim ulang kode verifikasi
         document.getElementById('resend-code').addEventListener('click', function() {
             const username = users.find(user => user.email === currentEmail).username;
             sendEmailVerification(username, currentEmail);
-            document.getElementById('verification-message').textContent = 'Kode verifikasi telah dikirim ulang ke email Anda.';
-        });
-
-        // Verifikasi kode
-        document.getElementById('verification').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const inputCode = document.getElementById('verification-code').value.trim();
-
-            if (inputCode === currentVerificationCode) {
-                const userIndex = users.findIndex(user => user.email === currentEmail);
-                if (userIndex !== -1) {
-                    users[userIndex].verified = true;
-                    localStorage.setItem('users', JSON.stringify(users));
-                    document.getElementById('verification-message').textContent = 'Akun Anda berhasil diverifikasi. Silakan login.';
-                    document.getElementById('verification-form').classList.add('hidden');
-                    document.getElementById('login-form').classList.remove('hidden');
-                }
-            } else {
-                document.getElementById('verification-message').textContent = 'Kode verifikasi salah. Silakan coba lagi.';
-            }
-        });
-
-        // Login
-        document.getElementById('login').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            const user = users.find(user => user.username === username && user.password === password);
-            if (user) {
-                if (!user.verified) {
-                    document.getElementById('message').textContent = 'Akun Anda belum terverifikasi. Silakan periksa email Anda untuk kode verifikasi.';
-                } else {
-                    // Alihkan ke menu utama setelah login berhasil
-                    window.location.href = 'menu.html'; // Ganti dengan URL menu utama Anda
-                }
-            } else {
-                document.getElementById('message').textContent = 'Username atau kata sandi salah!';
-            }
-        });
-
-        // Tampilkan formulir pendaftaran dari login
-        document.getElementById('show-signup').addEventListener('click', function() {
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('signup-form').classList.remove('hidden');
-            document.getElementById('signup-message').textContent = '';
-        });
-
-        // Tampilkan formulir lupa kata sandi
-        document.getElementById('show-forgot-password').addEventListener('click', function() {
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('forgot-password-form').classList.remove('hidden');
-            document.getElementById('reset-message').textContent = '';
-        });
-
-        // Kembali ke formulir login dari lupa kata sandi
-        document.getElementById('show-login-from-forgot').addEventListener('click', function() {
-            document.getElementById('forgot-password-form').classList.add('hidden');
-            document.getElementById('login-form').classList.remove('hidden');
-            document.getElementById('message').textContent = '';
         });
     </script>
 </body>
