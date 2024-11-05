@@ -151,7 +151,7 @@
     <script>
         // Inisialisasi EmailJS
         (function(){
-            emailjs.init("user_XXXXXXXXXXXXXXXX"); // Ganti dengan User ID Anda yang benar
+            emailjs.init("gXc7Ub6O_-xixxQJm"); // Ganti dengan User ID Anda yang benar
         })();
 
         const users = JSON.parse(localStorage.getItem('users')) || [];
@@ -203,6 +203,21 @@
             document.getElementById('verification-form').classList.remove('hidden');
         });
 
+        // Reset Password
+        document.getElementById('forgot-password').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('reset-email').value.trim();
+            const user = users.find(user => user.email === email);
+
+            if (!user) {
+                document.getElementById('reset-message').textContent = 'Email tidak terdaftar!';
+                return;
+            }
+
+            sendEmailVerification(user.username, email);
+            document.getElementById('reset-message').textContent = 'Kode reset telah dikirim ke email Anda.';
+        });
+
         // Hitungan mundur tombol kirim ulang
         function startResendCountdown() {
             const resendButton = document.getElementById('resend-code');
@@ -224,6 +239,17 @@
         document.getElementById('resend-code').addEventListener('click', function() {
             const username = users.find(user => user.email === currentEmail).username;
             sendEmailVerification(username, currentEmail);
+        });
+
+        // Navigasi antar formulir
+        document.getElementById('show-forgot-password').addEventListener('click', function() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('forgot-password-form').classList.remove('hidden');
+        });
+
+        document.getElementById('show-login-from-forgot').addEventListener('click', function() {
+            document.getElementById('forgot-password-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
         });
     </script>
 </body>
